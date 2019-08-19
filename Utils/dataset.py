@@ -24,5 +24,19 @@ class dataset:
                 print('Error!')
 
         return np.array(self.x), np.array(self.d)
+    
+    def irisFlowerBinary(self):
+        dataset = pd.read_csv('Datasets/iris.data', sep=',')
+        flowers = np.array(dataset['Classe'])
+
+        self.x = np.array(dataset.drop(['Classe'], axis=1))
+        
+        for flower in flowers:
+            if(flower == 'Iris-setosa'):
+                self.d.append([1])
+            else:
+                self.d.append([0])
+
+        return np.array(self.x), np.array(self.d)
 
 #End dataset

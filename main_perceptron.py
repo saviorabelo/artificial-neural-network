@@ -4,8 +4,7 @@ import Perceptron as ps
 
 # import dataset
 database = db.dataset()
-x_data, y_data = database.irisFlower()
+x_data, y_data = database.irisFlowerBinary()
 
 ps = ps.Perceptron(x_data, y_data)
-ps.normalize()
 ps.train()
