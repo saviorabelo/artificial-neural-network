@@ -7,4 +7,4 @@ database = db.dataset()
 x_data, y_data = database.irisFlowerBinary()
 
 ps = ps.Perceptron(x_data, y_data)
-ps.train()
+ps.perceptron()

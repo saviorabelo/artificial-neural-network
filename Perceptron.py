@@ -1,9 +1,9 @@
-import numpy as np
 import random
+import numpy as np
 
 class Perceptron:
 
-    def __init__(self, x_data, y_data, realizations=1, learning_rate=0.05, epochs=1, outLayer=1):
+    def __init__(self, x_data, y_data, realizations=1, learning_rate=0.05, epochs=1, outLayer=1, trainSize=0.8):
         self.x_data = x_data
         self.y_data = y_data
         self.attributes = x_data.shape[1]
@@ -11,12 +11,14 @@ class Perceptron:
         self.epochs = epochs
         self.realizations = realizations
         self.outLayer = outLayer
-        self.initWeigths()
-        self.normalize()
-        self.bias() # insert bias (-1)
+        self.trainSize = trainSize
+        self.x_train = []
+        self.x_test = []
+        self.y_train = []
+        self.y_test = []
 
     def bias(self):
-        (m, n) = self.x_data.shape
+        (m, _) = self.x_data.shape
         bias = -1 * np.ones((m,1))
         self.x_data = np.concatenate((bias, self.x_data), axis=1)
     
@@ -30,42 +32,73 @@ class Perceptron:
         self.x_data = (self.x_data - min_) / (max_ - min_)
 
     def degrau(self, u):
-        if u >= 0:
-            return np.array([1])
-        return np.array([0])
+        return np.array([1]) if u >= 0 else np.array([0])
+        #if u >= 0:
+        #    return np.array([1])
+        #return np.array([0])
     
-    def shuffle(self, a, b):
-        c = list(zip(a, b))
-        random.shuffle(c)
-        a, b = zip(*c)
-        return np.array(a), np.array(b)
+    def shuffle(self, x, y):
+        data = list(zip(x, y))
+        random.shuffle(data)
+        x, y = zip(*data)
+        return np.array(x), np.array(y)
+    
+    def split(self):
+        self.x_data, self.y_data = self.shuffle(self.x_data, self.y_data)
+
+        (m, _) = self.x_data.shape
+        x = int(m * self.trainSize) 
+
+        self.x_train = self.x_data[0:x]
+        self.x_test = self.x_data[x:]
+        self.y_train = self.y_data[0:x]
+        self.y_test = self.y_data[x:]
 
     def train(self):
         stop_error = 1
         cont_epochs = 0
         while (stop_error and cont_epochs < self.epochs):
-
-            #self.x_data, self.y_data = self.shuffle(self.x_data, self.y_data)
             stop_error = 0
-            (m, n) = self.x_data.shape
+            self.x_train, self.y_train = self.shuffle(self.x_train, self.y_train)
+            (m, _) = self.x_train.shape
             for i in range(m):
-                xi = self.x_data[i]
-                d = self.y_data[i]
-
-                u = np.dot(self.w, xi)
+                xi = self.x_train[i] # 1 x attributes+1
+                d = self.y_train[i]
+                u = np.dot(self.w, xi) # w = 1 x attributes+1
                 y = self.degrau(u)
                 error = d - y
 
-                #if error != 0:
+                # check if this error
                 if not np.array_equal(error, [0]):
                     stop_error = 1
 
                 self.w += self.eta * (error * xi)
 
             cont_epochs += 1
-# end Perceptron
+
+    def test(self):
+        hits = 0.0
+        (m, _) = self.x_test.shape
+        for i in range(m):
+            xi = self.x_test[i]
+            d = self.y_test[i]
+            u = np.dot(self.w, xi)
+            y = self.degrau(u)
+            error = d - y
+
+            if np.array_equal(error, [0]):
+                hits += 1
+        
+        hit_rate = hits/m
+        print('hit rate {}'.format(hit_rate))
 
 
+    def perceptron(self):
+        self.initWeigths()
+        self.normalize()
+        self.bias()
 
-
-#x_train, x_test, y_train, y_test = split(x_data, y_data, test_size=0.2)
+        for i in range(self.realizations):
+            self.split()
+            self.train()
+            self.test()
