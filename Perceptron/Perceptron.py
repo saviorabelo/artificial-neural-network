@@ -3,7 +3,7 @@ import numpy as np
 
 class Perceptron:
 
-    def __init__(self, x_data, y_data, realizations=1, learning_rate=0.05, epochs=1, outLayer=1, trainSize=0.8):
+    def __init__(self, x_data, y_data, realizations=10, learning_rate=0.05, epochs=1, outLayer=1, trainSize=0.8):
         self.x_data = x_data
         self.y_data = y_data
         self.attributes = x_data.shape[1]
@@ -16,6 +16,9 @@ class Perceptron:
         self.x_test = []
         self.y_train = []
         self.y_test = []
+        self.hit_rate = []
+        self.accuracy = 0
+        self.std = 0
 
     def bias(self):
         (m, _) = self.x_data.shape
@@ -53,6 +56,11 @@ class Perceptron:
         self.x_test = self.x_data[x:]
         self.y_train = self.y_data[0:x]
         self.y_test = self.y_data[x:]
+    
+    def predict(self, xi):
+        u = np.dot(self.w, xi)
+        y = self.degrau(u)
+        return y
 
     def train(self):
         stop_error = 1
@@ -62,9 +70,10 @@ class Perceptron:
             self.x_train, self.y_train = self.shuffle(self.x_train, self.y_train)
             (m, _) = self.x_train.shape
             for i in range(m):
-                xi = self.x_train[i] # 1 x attributes+1
+                xi = self.x_train[i]
                 d = self.y_train[i]
-                u = np.dot(self.w, xi) # w = 1 x attributes+1
+
+                u = np.dot(self.w, xi)
                 y = self.degrau(u)
                 error = d - y
 
@@ -81,16 +90,15 @@ class Perceptron:
         (m, _) = self.x_test.shape
         for i in range(m):
             xi = self.x_test[i]
+            y = self.predict(xi)
+
             d = self.y_test[i]
-            u = np.dot(self.w, xi)
-            y = self.degrau(u)
             error = d - y
 
             if np.array_equal(error, [0]):
                 hits += 1
         
-        hit_rate = hits/m
-        print('hit rate {}'.format(hit_rate))
+        self.hit_rate.append(hits/m)
 
 
     def perceptron(self):
@@ -102,3 +110,10 @@ class Perceptron:
             self.split()
             self.train()
             self.test()
+
+        self.accuracy = np.mean(self.hit_rate)
+        print('Accuracy {:.3f}'.format(self.accuracy*100))
+        self.std = np.std(self.hit_rate)
+        print('Std {:.3f}'.format(self.std))
+
+
