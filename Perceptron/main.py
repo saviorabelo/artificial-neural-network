@@ -10,10 +10,10 @@ def main():
     #x_data, y_data = irisFlowerBinary(attribute)
 
     # Column
-    #x_data, y_data = vertebralColumnBinary()
+    x_data, y_data = vertebralColumnBinary()
 
     # Artificial
-    x_data, y_data = artificialAND()
+    #x_data, y_data = artificialAND()
 
     ps = PS.Perceptron(x_data, y_data)
     ps.perceptron()

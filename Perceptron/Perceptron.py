@@ -1,10 +1,11 @@
 import random
 import numpy as np
 from utils import *
+from pandas_ml import ConfusionMatrix
 
 class Perceptron:
 
-    def __init__(self, x_data, y_data, activation='degree', realizations=1, \
+    def __init__(self, x_data, y_data, activation='degree', realizations=5, \
             learning_rate=0.05, epochs=200, train_size=0.8):
         self.x_data = x_data
         self.y_data = y_data
@@ -20,7 +21,10 @@ class Perceptron:
         self.y_train = []
         self.y_test = []
         self.hit_rate = []
-        self.accuracy = 0
+        self.tpr = [] # TPR: (Sensitivity, hit rate, recall)
+        self.spc = [] # TNR=SPC: (Specificity)
+        self.ppv = [] # PPV: Pos Pred Value (Precision)
+        self.acc = 0 # Accuracy
         self.std = 0
         
     def initWeigths(self):
@@ -67,8 +71,9 @@ class Perceptron:
         #print('Number of epochs: {}'.format(cont_epochs), end='\n')
 
     def test(self):
-        hits = 0.0
         (m, _) = self.x_test.shape
+        y_actu = []
+        y_pred = []
         for i in range(m):
             xi = self.x_test[i]
             y = self.predict(xi)
@@ -76,12 +81,17 @@ class Perceptron:
             d = self.y_test[i]
             error = d - y
 
-            #confusion matrix
+            # Confusion Matrix
+            y_actu.append(int(d))
+            y_pred.append(int(y))
 
-            if np.array_equal(error, [0]):
-                hits += 1
-        
-        self.hit_rate.append(hits/m)
+        cm = ConfusionMatrix(y_actu, y_pred)
+        self.hit_rate.append(cm.ACC)
+        self.tpr.append(cm.TPR)
+        self.spc.append(cm.SPC)
+        self.ppv.append(cm.PPV)
+        #cm.print_stats()
+        #print('Confusion Matrix:\n%s'.format(cm))
 
     def perceptron(self):
         self.x_data = normalizeData(self.x_data)
@@ -95,11 +105,17 @@ class Perceptron:
             self.train()
             self.test()
 
-        self.accuracy = np.mean(self.hit_rate)
+        self.acc = np.mean(self.hit_rate)
         self.std = np.std(self.hit_rate)
+        self.tpr = np.mean(self.tpr)
+        self.spc = np.mean(self.spc)
+        self.ppv = np.mean(self.ppv)
 
         print('Hit rate: {}'.format(self.hit_rate))
-        print('Accuracy: {:.3f}'.format(self.accuracy*100))
+        print('Accuracy: {:.3f}'.format(self.acc*100))
         print('Standard deviation: {:.3f}'.format(self.std))
+        print('Sensitivity: {:.3f}'.format(self.tpr*100))
+        print('Specificity: {:.3f}'.format(self.spc*100))
+        print('Precision: {:.3f}'.format(self.ppv*100))
 
 
