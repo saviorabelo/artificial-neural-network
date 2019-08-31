@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from dataset import *
-import Perceptron as PS
+from Utils.dataset import *
+from Utils.utils import *
+from Perceptron import Perceptron as PS
 
 def main():
     # Iris
@@ -10,13 +11,14 @@ def main():
     #x_data, y_data = irisFlowerBinary(attribute)
 
     # Column
-    x_data, y_data = vertebralColumnBinary()
+    #x_data, y_data = vertebralColumnBinary()
 
     # Artificial
-    #x_data, y_data = artificialAND()
+    x_data, y_data = artificialAND()
 
-    ps = PS.Perceptron(x_data, y_data)
+    ps = PS.Perceptron(x_data, y_data, normalize=False)
     ps.perceptron()
+    ps.plotColorMap()
 
 
 if __name__ == '__main__':
