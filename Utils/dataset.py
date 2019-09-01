@@ -4,12 +4,11 @@ import pandas as pd
 
 def artificialAND():
     # Data size 4*n*n
-    n = 5
-    x1 = [[random.uniform(0.2, 0.3), random.uniform(0.2, 0.3)] for _ in range(n) for _ in range(n)]
-    x2 = [[random.uniform(0.2, 0.3), random.uniform(0.6, 0.7)] for _ in range(n) for _ in range(n)]
-    x3 = [[random.uniform(0.6, 0.7), random.uniform(0.2, 0.3)] for _ in range(n) for _ in range(n)]
-    x4 = [[random.uniform(0.6, 0.7), random.uniform(0.6, 0.7)] for _ in range(n) for _ in range(n)]
-
+    n = 7
+    x1 = [[random.uniform(0.2, 0.4), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x2 = [[random.uniform(0.2, 0.4), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
+    x3 = [[random.uniform(0.6, 0.8), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x4 = [[random.uniform(0.6, 0.8), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
     x = np.concatenate((x1, x2), axis=0)
     x = np.concatenate((x, x3), axis=0)
     x = np.concatenate((x, x4), axis=0)
@@ -17,6 +16,37 @@ def artificialAND():
     y123 = [[0] for _ in range(3*n*n)]
     y4 = [[1] for _ in range(n*n)]
     y = np.concatenate((y123, y4), axis=0)
+
+    return x, y
+
+def artificialOR():
+    # Data size 4*n*n
+    n = 7
+    x1 = [[random.uniform(0.2, 0.4), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x2 = [[random.uniform(0.2, 0.4), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
+    x3 = [[random.uniform(0.6, 0.8), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x4 = [[random.uniform(0.6, 0.8), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
+    x = np.concatenate((x1, x2), axis=0)
+    x = np.concatenate((x, x3), axis=0)
+    x = np.concatenate((x, x4), axis=0)
+
+    y1 = [[0] for _ in range(n*n)]
+    y234 = [[1] for _ in range(3*n*n)]
+    
+    y = np.concatenate((y1, y234), axis=0)
+
+    return x, y
+
+def artificial2C():
+    # Data size 2*n*n
+    n = 7
+    x1 = [[random.uniform(0.2, 0.4), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x2 = [[random.uniform(0.6, 0.8), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
+    x = np.concatenate((x1, x2), axis=0)
+
+    y1 = [[0] for _ in range(n*n)]
+    y2 = [[1] for _ in range(n*n)]
+    y = np.concatenate((y1, y2), axis=0)
 
     return x, y
 
@@ -81,5 +111,34 @@ def vertebralColumn():
             y.append([0, 0, 1])
         else:
             print('Error!')
+
+    return np.array(x), np.array(y)
+
+def dermatologyBinary():
+    dataset = pd.read_csv('Datasets/dermatology.dat', sep=',')
+    classe = dataset['Classe']
+    x = dataset.drop(['Classe'], axis=1)
+
+    y = []
+    for i in classe:
+        if(i == 1):
+            y.append([1])
+        else:
+            y.append([0])
+
+    return np.array(x), np.array(y)
+
+def cancerBinary():
+    dataset = pd.read_csv('Datasets/wdbc.data', sep=',')
+    classe = dataset['Classe']
+    x = dataset.drop(['Classe'], axis=1)
+    x = x.drop(['ID'], axis=1)
+
+    y = []
+    for i in classe:
+        if(i == 'M'):
+            y.append([1])
+        else:
+            y.append([0])
 
     return np.array(x), np.array(y)

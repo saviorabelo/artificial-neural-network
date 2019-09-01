@@ -69,6 +69,7 @@ class Perceptron:
                 if not np.array_equal(error, [0]):
                     stop_error = 1
 
+                # update weights
                 self.w += self.eta * (error * xi)
 
             cont_epochs += 1
@@ -83,7 +84,7 @@ class Perceptron:
             y = self.predict(xi)
 
             d = self.y_test[i]
-            error = d - y
+            #error = d - y
 
             # Confusion Matrix
             y_actu.append(int(d))
@@ -128,7 +129,6 @@ class Perceptron:
         color1_y = []
         color2_x = []
         color2_y = []
-
         for i in np.arange(0,1.0,0.005):
             for j in np.arange(0,1.0,0.005):
                 xi = np.array([-1, i, j])
@@ -141,7 +141,7 @@ class Perceptron:
                     color2_y.append(j)
         
         fig, ax = plt.subplots()
-        plt.title('Perceptron Color Map - AND')
+        plt.title('Perceptron Color Map')
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo y')
         
