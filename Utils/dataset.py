@@ -73,6 +73,10 @@ def irisFlowerBinary(attribute):
     classe = dataset['Classe']
     x = dataset.drop(['Classe'], axis=1)
     
+    # Remove column
+    #x = x.drop(['Petal_Length'], axis=1)
+    #x = x.drop(['Petal_Width'], axis=1)
+    
     y = []
     for i in classe:
         if(i == attribute):
@@ -86,6 +90,12 @@ def vertebralColumnBinary():
     dataset = pd.read_csv('Datasets/column_2C.dat', sep=' ')
     classe = dataset['Classe']
     x = dataset.drop(['Classe'], axis=1)
+
+    # Remove column
+    #x = x.drop(['lumbar_lordosis_angle'], axis=1)
+    #x = x.drop(['sacral_slope'], axis=1)
+    #x = x.drop(['pelvic_radius'], axis=1)
+    #x = x.drop(['grade_of_spondylolisthesis'], axis=1)
 
     y = []
     for i in classe:
