@@ -2,6 +2,16 @@ import random
 import numpy as np
 import pandas as pd
 
+def artificial2D():
+    a = 2
+    b = 10
+    n = 50
+    x = np.linspace(0, 10, n).reshape((-1, 1))
+    y = a*x + b
+    for i in range(n):
+        y += random.uniform(-1, 1)
+    return x, y
+
 def artificialAND():
     # Data size 4*n*n
     n = 7
