@@ -72,22 +72,15 @@ class Adaline:
             mse_vector.append(mse)
 
             if abs(error_epoch - error_old) <= self.precision:
-                print('Precision: {}'.format(abs(error_epoch - error_old)))
+                print('Stop Precision: {}'.format(abs(error_epoch - error_old)))
                 break
             if cont_epochs >= self.epochs:
-                print('Epochs: {}'.format(cont_epochs))
+                print('Stop Epochs: {}'.format(cont_epochs))
                 break
 
             error_old = error_epoch
             cont_epochs += 1
-        
-        #fig, ax = plt.subplots()
-        #plt.title('Errors in training')
-        #plt.xlabel('Epochs')
-        #plt.ylabel('Errors')
-        #ax.scatter([range(len(mse_vector))], mse_vector, marker='o', color=[0.00, 0.45, 0.74])
-        #ax.grid(True)
-        #plt.show()
+        #plotErrors(mse_vector)
 
     def test(self):
         (m, _) = self.x_test.shape
@@ -104,8 +97,8 @@ class Adaline:
         self.rmse = np.sqrt(self.mse)
 
     def adaline(self):
-        if self.normalize:
-            self.x_data = normalizeData(self.x_data)
+        #if self.normalize:
+        #    self.x_data = normalizeData(self.x_data)
         self.x_data = insertBias(self.x_data)
 
         for i in range(self.realizations):
@@ -118,3 +111,32 @@ class Adaline:
 
         print('MSE: {}'.format(self.mse))
         print('RMSE: {}'.format(self.rmse))
+    
+    def plotColorMap(self):
+        if self.attributes == 1:
+            self.plotColorMap2D
+        elif self.attributes == 2:
+            self.plotColorMap3D
+        else:
+            print('Invalid number of attributes!\n')
+    
+    def plotColorMap2D(self):
+        n = 100
+        x = np.linspace(0, 1, n)
+        y = [self.predict(np.array([-1, i])) for i in x]
+
+        fig, ax = plt.subplots()
+        plt.title('Adaline 2D Color Map\nMSE: {}\nRMSE: {}'.format(self.mse, self.rmse))
+        plt.xlabel('Eixo X')
+        plt.ylabel('Eixo y')
+
+        ax.scatter(x, y, label='Predict', color=[0.31, 0.31, 0.31])
+        ax.scatter(self.x_train[:,1], self.y_train[:,0], label='Train Data', color=[0.00, 0.45, 0.74])
+        ax.scatter(self.x_test[:,1], self.y_test[:,0], label='Test Data', color='green')
+
+        ax.legend()
+        ax.grid(True)
+        plt.show()
+
+    def plotColorMap3D(self):
+        print('3D\n')

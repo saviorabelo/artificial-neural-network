@@ -30,3 +30,20 @@ def splitData(x_data, y_data, train_size):
     y_train = y_data[0:x]
     y_test = y_data[x:]
     return x_train, x_test, y_train, y_test
+
+def plotConfusionMatrix(cm):
+    cm.plot()
+    plt.title('Confusion Matrix')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.show()
+
+def plotErrors(vector_error):
+    fig, ax = plt.subplots()
+    plt.title('Errors in training')
+    plt.xlabel('Epochs')
+    plt.ylabel('Errors')
+    x = [range(len(vector_error))]
+    ax.scatter(x, vector_error, marker='o', color=[0.00, 0.45, 0.74])
+    ax.grid(True)
+    plt.show()

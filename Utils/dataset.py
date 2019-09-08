@@ -5,11 +5,12 @@ import pandas as pd
 def artificial2D():
     a = 2
     b = 10
-    n = 50
-    x = np.linspace(0, 10, n).reshape((-1, 1))
+    n = 100
+    noise = 0.3
+    x = np.linspace(0, 1, n).reshape((-1, 1))
     y = a*x + b
     for i in range(n):
-        y += random.uniform(-1, 1)
+        y[i] += random.uniform(-noise, noise)
     return x, y
 
 def artificialAND():

@@ -82,16 +82,7 @@ class Perceptron:
                 self.w += self.eta * (error * xi)
             vector_error.append(aux)
             cont_epochs += 1
-        #print('Number of epochs: {}'.format(cont_epochs), end='\n')
-
-        #print(vector_error)
-        #fig, ax = plt.subplots()
-        #plt.title('Errors in training')
-        #plt.xlabel('Epochs')
-        #plt.ylabel('Errors')
-        #ax.scatter([range(len(vector_error))], vector_error, marker='o', color=[0.00, 0.45, 0.74])
-        #ax.grid(True)
-        #plt.show()
+        #plotErrors(vector_error)
 
     def test(self):
         (m, _) = self.x_test.shape
@@ -114,12 +105,7 @@ class Perceptron:
         self.spc.append(cm.SPC)
         self.ppv.append(cm.PPV)
         #cm.print_stats()
-
-        #cm.plot()
-        #plt.title('Confusion Matrix\nAccuracy: {:.2f}'.format(cm.ACC*100))
-        #plt.ylabel('True Label')
-        #plt.xlabel('Predicted Label')
-        #plt.show()
+        #plotConfusionMatrix(cm)
  
     def perceptron(self):
         if self.normalize:
