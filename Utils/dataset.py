@@ -7,11 +7,33 @@ def artificial2D():
     b = 10
     n = 100
     noise = 0.3
+
     x = np.linspace(0, 1, n).reshape((-1, 1))
+
     y = a*x + b
     for i in range(n):
         y[i] += random.uniform(-noise, noise)
+
     return x, y
+
+def artificial3D():
+    a = 2
+    b = 4
+    c = 5
+    n = 300
+
+    x = np.linspace(0, 1, n).reshape((-1, 1))
+    
+    y = np.linspace(0, 1, n).reshape((-1, 1))
+    for i in range(n):
+        y[i] += random.uniform(-1, 1)
+    
+    z = a*x + b*y + c
+    for i in range(n):
+        z[i] += random.uniform(-1, 1)
+    
+    aux = np.concatenate((x, y), axis=1)
+    return aux, z
 
 def artificialAND():
     # Data size 4*n*n

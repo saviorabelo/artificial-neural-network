@@ -1,7 +1,9 @@
 import random
 import numpy as np
 from Utils.utils import *
+from matplotlib import cm
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Adaline:
 
@@ -14,7 +16,7 @@ class Adaline:
         self.eta = 0.0
         self.epochs = 200
         self.realizations = 1
-        self.precision = 10**(-5)
+        self.precision = 10**(-7)
         self.train_size = 0.8
         self.x_train = []
         self.x_test = []
@@ -97,8 +99,8 @@ class Adaline:
         self.rmse = np.sqrt(self.mse)
 
     def adaline(self):
-        #if self.normalize:
-        #    self.x_data = normalizeData(self.x_data)
+        if self.normalize:
+            self.x_data = normalizeData(self.x_data)
         self.x_data = insertBias(self.x_data)
 
         for i in range(self.realizations):
@@ -114,15 +116,14 @@ class Adaline:
     
     def plotColorMap(self):
         if self.attributes == 1:
-            self.plotColorMap2D
+            self.plotColorMap2D()
         elif self.attributes == 2:
-            self.plotColorMap3D
+            self.plotColorMap3D()
         else:
             print('Invalid number of attributes!\n')
     
     def plotColorMap2D(self):
-        n = 100
-        x = np.linspace(0, 1, n)
+        x = self.x_data[:,1]
         y = [self.predict(np.array([-1, i])) for i in x]
 
         fig, ax = plt.subplots()
@@ -139,4 +140,23 @@ class Adaline:
         plt.show()
 
     def plotColorMap3D(self):
-        print('3D\n')
+        x = self.x_data[:,1]
+        y = self.x_data[:,2]
+        z = []
+        for i in range(len(x)):
+            aux = self.predict([-1, x[i], y[i]])
+            z.append(aux[0])
+        z = np.array(z)
+
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        ax.plot_trisurf(x, y, z, linewidth=0.2, antialiased=True, cmap=plt.cm.PuOr)
+        #ax.scatter(x, y, z, label='Predict', c='k', marker='o')
+        ax.scatter(self.x_train[:,1], self.x_train[:,2], self.y_train[:,0], label='Train Data', color=[0.00, 0.45, 0.74])
+        ax.scatter(self.x_test[:,1], self.x_test[:,2], self.y_test[:,0], label='Test Data', color='green')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+
+        plt.title('Adaline 3D Color Map\nMSE: {}\nRMSE: {}'.format(self.mse, self.rmse))
+        plt.show()
