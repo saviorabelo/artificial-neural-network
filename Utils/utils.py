@@ -47,3 +47,16 @@ def plotErrors(vector_error):
     ax.scatter(x, vector_error, marker='o', color=[0.00, 0.45, 0.74])
     ax.grid(True)
     plt.show()
+
+def inverse_transform(classes):
+
+    n_classes = np.unique(classes, axis=0)
+    k = n_classes.shape[0]
+
+    y_new = []
+    for j in classes:
+        for i in range(k):
+            if np.array_equal(j, n_classes[i]):
+                y_new.append(i+1)
+                break
+    return y_new

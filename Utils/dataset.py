@@ -83,6 +83,24 @@ def artificial2C():
 
     return x, y
 
+def artificial3C():
+    # Data size 3*n*n
+    n = 7
+
+    x1 = [[random.uniform(0.2, 0.4), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x2 = [[random.uniform(0.4, 0.6), random.uniform(0.6, 0.8)] for _ in range(n) for _ in range(n)]
+    x3 = [[random.uniform(0.6, 0.8), random.uniform(0.2, 0.4)] for _ in range(n) for _ in range(n)]
+    x = np.concatenate((x1, x2), axis=0)
+    x = np.concatenate((x, x3), axis=0)
+
+    y1 = [[0,0,1] for _ in range(n*n)]
+    y2 = [[0,1,0] for _ in range(n*n)]
+    y3 = [[1,0,0] for _ in range(n*n)]
+    y = np.concatenate((y1, y2), axis=0)
+    y = np.concatenate((y, y3), axis=0)
+
+    return x, y
+
 def irisFlower():
     dataset = pd.read_csv('Datasets/iris.data', sep=',')
     classe = dataset['Classe']
