@@ -22,8 +22,8 @@ class Adaline:
         self.x_test = []
         self.y_train = []
         self.y_test = []
-        self.mse = 0.0
-        self.rmse = 0.0
+        self.mse = []
+        self.rmse = []
         if normalize == None:
             self.normalize = True
         else:
@@ -74,10 +74,10 @@ class Adaline:
             mse_vector.append(mse)
 
             if abs(error_epoch - error_old) <= self.precision:
-                print('Stop Precision: {}'.format(abs(error_epoch - error_old)))
+                #print('Stop Precision: {}'.format(abs(error_epoch - error_old)))
                 break
             if cont_epochs >= self.epochs:
-                print('Stop Epochs: {}'.format(cont_epochs))
+                #print('Stop Epochs: {}'.format(cont_epochs))
                 break
 
             error_old = error_epoch
@@ -95,8 +95,9 @@ class Adaline:
             error = d - y
             error_epoch += error**2
 
-        self.mse = error_epoch / m
-        self.rmse = np.sqrt(self.mse)
+        mse = error_epoch / m
+        self.mse.append(mse)
+        self.rmse.append(np.sqrt(mse))
 
     def adaline(self):
         if self.normalize:
@@ -111,8 +112,11 @@ class Adaline:
             self.train()
             self.test()
 
-        print('MSE: {}'.format(self.mse))
-        print('RMSE: {}'.format(self.rmse))
+        print('{} Realizations'.format(self.realizations))
+        print('MSE: {}'.format(np.mean(self.mse)))
+        print('Std MSE: {}'.format(np.std(self.mse)))
+        print('RMSE: {}'.format(np.mean(self.rmse)))
+        print('Std RMSE: {}'.format(np.std(self.rmse)))
     
     def plotColorMap(self):
         if self.attributes == 1:

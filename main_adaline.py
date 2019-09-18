@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from Utils.dataset import *
 from Utils.utils import *
+from Utils.dataset import *
 from Adaline import Adaline as ad
 
 def main():
@@ -10,7 +10,7 @@ def main():
 
     model = ad.Adaline(x_data, y_data)
     model.adaline()
-    model.plotColorMap()
+    #model.plotColorMap()
 
 if __name__ == '__main__':
     main()
