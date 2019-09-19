@@ -1,26 +1,15 @@
 # -*- coding: utf-8 -*-
-from Utils.dataset import *
-from Utils.utils import *
-from Perceptron import Perceptron as PS
+import numpy as np
+from Utils.dataset import Data as data
+from Perceptron import Perceptron as pc
 
 def main():
 
-    x_data, y_data = irisFlowerBinary('Iris-setosa')
-    #x_data, y_data = irisFlowerBinary('Iris-versicolor')
-    #x_data, y_data = irisFlowerBinary('Iris-virginica')
-    #x_data, y_data = vertebralColumnBinary()
-    #x_data, y_data = dermatologyBinary()
-    #x_data, y_data = cancerBinary()
+    x_data, y_data = data.artificial3C()
+    #x_data, y_data = data.irisFlower()
 
-    # Artificial
-    #x_data, y_data = artificial2C()
-    #x_data, y_data = artificialAND()
-    #x_data, y_data = artificialOR()
-
-    ps = PS.Perceptron(x_data, y_data)
-    ps.perceptron()
-    #ps.plotColorMap()
-
+    ps = pc.Perceptron(x_data, y_data)
+    ps.execute()
 
 if __name__ == '__main__':
     main()

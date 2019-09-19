@@ -14,7 +14,7 @@ class Perceptron:
         self.output_layer = y_data.shape[1]
         self.eta = 0.0 # Learning rate
         self.epochs = 200
-        self.realizations = 2
+        self.realizations = 1
         self.train_size = 0.8
         self.x_train = []
         self.x_test = []
@@ -36,8 +36,7 @@ class Perceptron:
         self.w = np.random.rand(self.output_layer, self.attributes+1)
     
     def degreeFunction(self, u):
-        index = np.amax(u)
-        return np.where(u == index, 1, 0)
+        return np.array([1]) if u >= 0 else np.array([0])
 
     def activationFunction(self, u):
         try:
@@ -66,19 +65,24 @@ class Perceptron:
             stop_error = 0
             self.x_train, self.y_train = shuffleData(self.x_train, self.y_train)
             (m, _) = self.x_train.shape
+            aux = 0
             for i in range(m):
                 xi = self.x_train[i]
                 y = self.predict(xi)
+
                 d = self.y_train[i]
                 error = d - y
+                aux += abs(int(error))
 
                 # check if this error
-                if not np.array_equal(error, [0, 0, 0]):
+                if not np.array_equal(error, [0]):
                     stop_error = 1
 
                 # update weights
-                self.w += self.eta * (error.reshape(-1, 1) * xi)
+                self.w += self.eta * (error * xi)
+            vector_error.append(aux)
             cont_epochs += 1
+        #plotErrors(vector_error)
 
     def test(self):
         (m, _) = self.x_test.shape
@@ -87,15 +91,15 @@ class Perceptron:
         for i in range(m):
             xi = self.x_test[i]
             y = self.predict(xi)
+
             d = self.y_test[i]
+            #error = d - y
 
             # Confusion Matrix
-            y_actu.append(list(d))
-            y_pred.append(list(y))
+            y_actu.append(int(d))
+            y_pred.append(int(y))
 
-        a = inverse_transform(y_actu)
-        b = inverse_transform(y_pred)
-        cm = ConfusionMatrix(a, b)
+        cm = ConfusionMatrix(y_actu, y_pred)
         self.hit_rate.append(cm.ACC)
         self.tpr.append(cm.TPR)
         self.spc.append(cm.SPC)
@@ -138,31 +142,22 @@ class Perceptron:
             color1_y = []
             color2_x = []
             color2_y = []
-            color3_x = []
-            color3_y = []
             for i in np.arange(0,1.0,0.005):
                 for j in np.arange(0,1.0,0.005):
                     xi = np.array([-1, i, j])
                     y = self.predict(xi)
-                    if np.array_equal(y, [0,0,1]):
+                    if np.array_equal(y, [0]):
                         color1_x.append(i)
                         color1_y.append(j)
-                    elif np.array_equal(y, [0,1,0]):
+                    else:
                         color2_x.append(i)
                         color2_y.append(j)
-                    elif np.array_equal(y, [1,0,0]):
-                        color3_x.append(i)
-                        color3_y.append(j)
-                    else:
-                        print('Error!\n')
             
             # Split a train class
-            i, _ = np.where(self.y_train == [0,0,1])
+            i, _ = np.where(self.y_train == [0])
             train1 = self.x_train[i]
-            j, _ = np.where(self.y_train == [0,1,0])
+            j, _ = np.where(self.y_train == [1])
             train2 = self.x_train[j]
-            k, _ = np.where(self.y_train == [1,0,0])
-            train3 = self.x_train[k]
 
             fig, ax = plt.subplots()
             plt.title('Perceptron Color Map')
@@ -171,10 +166,8 @@ class Perceptron:
 
             ax.scatter(color1_x, color1_y, color=[0.80, 0.88, 0.97])
             ax.scatter(color2_x, color2_y, color=[0.80, 0.80, 0.80])
-            ax.scatter(color3_x, color3_y, color=[0.95, 0.87, 0.73])
             ax.scatter(train1[:,1], train1[:,2], label='Classe 1', color=[0.00, 0.45, 0.74])
             ax.scatter(train2[:,1], train2[:,2], label='Classe 2', color=[0.31, 0.31, 0.31])
-            ax.scatter(train3[:,1], train3[:,2], label='Classe 3', color=[0.60, 0.20, 0.00])
             ax.scatter(self.x_test[:,1], self.x_test[:,2], label='Test Data', color='green')
 
             ax.legend()
@@ -182,4 +175,3 @@ class Perceptron:
             plt.show()
         else:
             print('Invalid number of attributes!\n')
-
