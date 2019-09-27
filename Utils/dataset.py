@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import pandas as pd
+from Utils.utils import Util as util
 
 class Data:
     def artificial2D():
@@ -106,23 +107,13 @@ class Data:
         dataset = pd.read_csv('Datasets/iris.data', sep=',')
         classe = dataset['Classe']
         x = dataset.drop(['Classe'], axis=1)
+        y = util.transform(classe)
 
         # Remove column
         #x = x.drop(['Petal_Length'], axis=1)
         #x = x.drop(['Petal_Width'], axis=1)
-        
-        y = []
-        for i in classe:
-            if(i == 'Iris-setosa'):
-                y.append([1, 0, 0])
-            elif(i == 'Iris-versicolor'):
-                y.append([0, 1, 0])
-            elif(i == 'Iris-virginica'):
-                y.append([0, 0, 1])
-            else:
-                print('Error!')
 
-        return np.array(x), np.array(y)
+        return np.array(x), y
 
     def irisFlowerBinary(attribute):
         dataset = pd.read_csv('Datasets/iris.data', sep=',')
@@ -166,19 +157,9 @@ class Data:
         dataset = pd.read_csv('Datasets/column_3C.dat', sep=' ')
         classe = dataset['Classe']
         x = dataset.drop(['Classe'], axis=1)
-            
-        y = []
-        for i in classe:
-            if(i == 'DH'):
-                y.append([1, 0, 0])
-            elif(i == 'SL'):
-                y.append([0, 1, 0])
-            elif(i == 'NO'):
-                y.append([0, 0, 1])
-            else:
-                print('Error!')
+        y = util.transform(classe)
 
-        return np.array(x), np.array(y)
+        return np.array(x), y
 
     def dermatologyBinary():
         dataset = pd.read_csv('Datasets/dermatology.dat', sep=',')

@@ -23,7 +23,6 @@ class Util:
         return x_aux, y_aux
 
     def splitData(x_data, y_data, train_size):
-
         (m, _) = x_data.shape
         x = int(m * train_size) 
 
@@ -62,6 +61,19 @@ class Util:
                     break
         return y_new
     
+    def transform(classes):
+        n_classes = np.unique(classes)
+        k = len(n_classes)
+        iden = np.identity(k)[::-1]
+        
+        classes_new = []
+        for i in classes:
+            for index, j in enumerate(n_classes):
+                if np.array_equal(i, j):
+                    aux = list(iden[index])
+                    classes_new.append(aux)
+        return np.array(classes_new)
+
     def plotColorMap(x_train, x_test, y_train, predict):
 
         color1_x = []
