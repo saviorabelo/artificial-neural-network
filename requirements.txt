@@ -3,3 +3,4 @@ pandas
 random
 pandas_ml
 matplotlib
+mpl_toolkits
