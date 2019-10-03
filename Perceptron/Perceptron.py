@@ -15,10 +15,13 @@ class Perceptron:
         self.attributes = x_data.shape[1]
         self.output_layer = y_data.shape[1]
         self.epochs = 200
-        self.realizations = 1
+        self.realizations = 10
         self.train_size = 0.8
-        self.hit_rate = []
         self.activation = activation
+        self.hit_rate = []
+        self.tpr = []
+        self.spc = []
+        self.ppv = []
     
     def initWeigths(self):
         self.w = np.random.rand(self.output_layer, self.attributes+1)
@@ -81,16 +84,25 @@ class Perceptron:
 
     def test(self, x_test, y_test):
         (m, _) = x_test.shape
-        misses = 0.0
+        y_actu = []
+        y_pred = []
         for i in range(m):
             xi = x_test[i]
             y, _ = self.predict(xi)
             d = y_test[i]
+           
+            # Confusion Matrix
+            y_actu.append(list(d))
+            y_pred.append(list(y))
 
-            if np.array_equal(d, y):
-                misses += 1
-        return (misses/m)
- 
+        a = util.inverse_transform(y_actu)
+        b = util.inverse_transform(y_pred)
+        cm = ConfusionMatrix(a, b)
+        #cm.print_stats()
+        #util.plotConfusionMatrix(cm)
+
+        return cm.ACC, cm.TPR, cm.SPC, cm.PPV 
+
     def execute(self):
         # Pre processing
         x_data = util.normalizeData(self.x_data)
@@ -102,15 +114,26 @@ class Perceptron:
             x_data_aux, y_data_aux = util.shuffleData(x_data, y_data)
             x_train, x_test, y_train, y_test = util.splitData(x_data_aux, y_data_aux, self.train_size)
             self.train(x_train, y_train)
-            hr = self.test(x_test, y_test)
-            self.hit_rate.append(hr)
+            acc, tpr, spc, ppv = self.test(x_test, y_test)
+            
+            self.hit_rate.append(acc)
+            self.tpr.append(tpr)
+            self.spc.append(spc)
+            self.ppv.append(ppv)
         
         #util.plotColorMap(x_train, x_test, y_train, self.predict)
 
         self.acc = np.mean(self.hit_rate)
         self.std = np.std(self.hit_rate)
+        self.tpr = np.mean(self.tpr)
+        self.spc = np.mean(self.spc)
+        self.ppv = np.mean(self.ppv)
+
         print('Hit rate: {}'.format(self.hit_rate))
         print('Accuracy: {:.2f}'.format(self.acc*100))
         print('Minimum: {:.2f}'.format(np.amin(self.hit_rate)*100))
         print('Maximum: {:.2f}'.format(np.amax(self.hit_rate)*100))
         print('Standard Deviation: {:.2f}'.format(self.std))
+        print('Sensitivity: {:.2f}'.format(self.tpr*100))
+        print('Specificity: {:.2f}'.format(self.spc*100))
+        print('Precision: {:.2f}'.format(self.ppv*100))

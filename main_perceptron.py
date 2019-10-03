@@ -5,9 +5,9 @@ from Perceptron import Perceptron as pc
 
 def main():
 
-    x_data, y_data = data.artificial3C()
+    #x_data, y_data = data.artificial3C()
     #x_data, y_data = data.irisFlower()
-    #x_data, y_data = data.vertebralColumn()
+    x_data, y_data = data.vertebralColumn()
 
     ps = pc.Perceptron(x_data, y_data, activation='logistic')
     ps.execute()
