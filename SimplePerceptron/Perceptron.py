@@ -1,35 +1,23 @@
 import random
 import numpy as np
-from Utils.utils import *
+from Utils.utils import Util as util
 from matplotlib import pyplot as plt
 from pandas_ml import ConfusionMatrix
 
 class Perceptron:
-
-    def __init__(self, x_data, y_data, normalize=None):
+    def __init__(self, x_data, y_data):
         self.x_data = x_data
         self.y_data = y_data
         self.activation = 'degree'
         self.attributes = x_data.shape[1]
         self.output_layer = y_data.shape[1]
-        self.eta = 0.0 # Learning rate
         self.epochs = 200
         self.realizations = 1
         self.train_size = 0.8
-        self.x_train = []
-        self.x_test = []
-        self.y_train = []
-        self.y_test = []
         self.hit_rate = []
-        self.tpr = [] # TPR: (Sensitivity, hit rate, recall)
-        self.spc = [] # TNR=SPC: (Specificity)
-        self.ppv = [] # PPV: Pos Pred Value (Precision)
-        self.acc = 0 # Accuracy
-        self.std = 0
-        if normalize == None:
-            self.normalize = True
-        else:
-            self.normalize = normalize
+        self.tpr = []
+        self.spc = []
+        self.ppv = []
     
     def initWeigths(self):
         # initializes weights randomly
@@ -56,21 +44,21 @@ class Perceptron:
         eta = eta_f * ((eta_i / eta_f) ** (epoch / self.epochs))
         self.eta = eta
 
-    def train(self):
+    def train(self, x_train, y_train):
         stop_error = 1
         cont_epochs = 0
         vector_error = []
         while (stop_error and cont_epochs < self.epochs):
             self.updateEta(cont_epochs)
             stop_error = 0
-            self.x_train, self.y_train = shuffleData(self.x_train, self.y_train)
-            (m, _) = self.x_train.shape
+            x_train, y_train = util.shuffleData(x_train, y_train)
+            (m, _) = x_train.shape
             aux = 0
             for i in range(m):
-                xi = self.x_train[i]
+                xi = x_train[i]
                 y = self.predict(xi)
 
-                d = self.y_train[i]
+                d = y_train[i]
                 error = d - y
                 aux += abs(int(error))
 
@@ -84,15 +72,14 @@ class Perceptron:
             cont_epochs += 1
         #plotErrors(vector_error)
 
-    def test(self):
-        (m, _) = self.x_test.shape
+    def test(self, x_test, y_test):
         y_actu = []
         y_pred = []
+        (m, _) = x_test.shape
         for i in range(m):
-            xi = self.x_test[i]
+            xi = x_test[i]
             y = self.predict(xi)
-
-            d = self.y_test[i]
+            d = y_test[i]
             #error = d - y
 
             # Confusion Matrix
@@ -100,26 +87,29 @@ class Perceptron:
             y_pred.append(int(y))
 
         cm = ConfusionMatrix(y_actu, y_pred)
-        self.hit_rate.append(cm.ACC)
-        self.tpr.append(cm.TPR)
-        self.spc.append(cm.SPC)
-        self.ppv.append(cm.PPV)
         #cm.print_stats()
         #plotConfusionMatrix(cm)
+
+        return cm.ACC, cm.TPR, cm.SPC, cm.PPV 
  
     def perceptron(self):
-        if self.normalize:
-            self.x_data = normalizeData(self.x_data)
-        self.x_data = insertBias(self.x_data)
+        # Pre processing
+        x_data = util.normalizeData(self.x_data)
+        x_data = util.insertBias(x_data)
+        y_data = self.y_data
 
         for i in range(self.realizations):
             self.initWeigths()
-            x_data_aux, y_data_aux = shuffleData(self.x_data, self.y_data)
-            self.x_train, self.x_test, self.y_train, self.y_test = splitData(x_data_aux, \
-                y_data_aux, self.train_size)
-            self.train()
-            self.test()
-
+            x_data_aux, y_data_aux = util.shuffleData(x_data, y_data)
+            x_train, x_test, y_train, y_test = util.splitData(x_data_aux, y_data_aux, self.train_size)
+            self.train(x_train, y_train)
+            acc, tpr, spc, ppv = self.test(x_test, y_test)
+            
+            self.hit_rate.append(acc)
+            self.tpr.append(tpr)
+            self.spc.append(spc)
+            self.ppv.append(ppv)
+        
         self.acc = np.mean(self.hit_rate)
         self.std = np.std(self.hit_rate)
         self.tpr = np.mean(self.tpr)
