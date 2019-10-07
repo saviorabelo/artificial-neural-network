@@ -49,8 +49,7 @@ class Util:
         ax.grid(True)
         plt.show()
 
-    def inverse_transform(classes):
-        n_classes = np.unique(classes, axis=0)
+    def inverse_transform(classes, n_classes):
         k = n_classes.shape[0]
 
         y_new = []
@@ -85,7 +84,7 @@ class Util:
         for i in np.arange(0,1.0,0.005):
             for j in np.arange(0,1.0,0.005):
                 xi = np.array([-1, i, j])
-                y, _ = predict(xi)
+                y = predict(xi)
                 if np.array_equal(y, [0,0,1]):
                     color1_x.append(i)
                     color1_y.append(j)

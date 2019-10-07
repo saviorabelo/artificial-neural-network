@@ -4,6 +4,12 @@ import numpy as np
 from Utils.utils import Util as util
 from matplotlib import pyplot as plt
 from pandas_ml import ConfusionMatrix
+from sklearn.metrics import accuracy_score as acc
+#TPR: (Sensitivity, hit rate, recall)
+from sklearn.metrics import recall_score as tpr
+#TNR=SPC: (Specificity)
+#PPV: Pos Pred Value (Precision)
+from sklearn.metrics import precision_score as ppv
 
 class Perceptron:
     def __init__(self, x_data, y_data, activation, hidden_layer):
@@ -12,12 +18,13 @@ class Perceptron:
             self.y_data = np.where(y_data == 1, 1, -1)
         else:
             self.y_data = y_data
+        self.n_classes = np.unique(self.y_data, axis=0)
         self.attributes = x_data.shape[1]
         self.hidden_layer = hidden_layer
         self.output_layer = y_data.shape[1]
-        self.epochs = 150
+        self.epochs = 300
         self.realizations = 1
-        self.precision = 10**(-5)
+        self.precision = 10**(-7)
         self.train_size = 0.8
         self.activation = activation
         self.hit_rate = []
@@ -26,8 +33,8 @@ class Perceptron:
         self.ppv = []
     
     def initWeigths(self):
-        self.w = np.random.random((self.attributes+1, self.hidden_layer))
-        self.m = np.random.random((self.hidden_layer+1, self.output_layer))
+        self.w = np.random.rand(self.attributes+1, self.hidden_layer)
+        self.m = np.random.rand(self.hidden_layer+1, self.output_layer)
 
     def function(self, u):
         if self.activation == 'step':
@@ -37,7 +44,7 @@ class Perceptron:
         elif self.activation == 'tanh':
             y = (np.exp(u) - np.exp(-u))/(np.exp(u) + np.exp(-u))
         return y    
-    
+
     def derivate(self, u):
         if self.activation == 'step':
             y_ = 1
@@ -46,9 +53,9 @@ class Perceptron:
         elif self.activation == 'tanh':
             y_ = 0.5 * (1.0 - (u * u))
         return y_
-    
+
     def activationFunction(self, u):
-        value = np.nanmax(u)
+        value = np.amax(u)
         if self.activation == 'step' or self.activation == 'logistic':
             y = np.where(u == value, 1, 0)
         elif self.activation == 'tanh':
@@ -56,12 +63,18 @@ class Perceptron:
         return y
 
     def predict(self, xi):
-        u = np.dot(self.w, xi)
-        u, y, y_ = self.activationFunction(u)
-        return u, y, y_
+        H = np.dot(xi, self.w)
+        H = self.function(H)
+
+        H = np.concatenate(([-1], H), axis=None)
+        Y = np.dot(H, self.m)
+        Y = self.function(Y)
+        
+        y = self.activationFunction(Y)
+        return y
     
     def updateEta(self, epoch):
-        eta_i = 0.05
+        eta_i = 0.1
         eta_f = 0.5
         eta = eta_f * ((eta_i / eta_f) ** (epoch / self.epochs))
         self.eta = eta
@@ -73,11 +86,11 @@ class Perceptron:
         while True:
             self.updateEta(cont_epochs)
             x_train, y_train = util.shuffleData(x_train, y_train)
-            (m, _) = x_train.shape
+            (p, _) = x_train.shape
             error_epoch = 0
-            for i in range(m):
-                xi = x_train[i]
-                H = np.dot(xi, self.w)
+            for k in range(p):
+                x_k = x_train[k]
+                H = np.dot(x_k, self.w)
                 H = self.function(H)
                 H_ = self.derivate(H)
                 
@@ -87,28 +100,28 @@ class Perceptron:
                 Y_ = self.derivate(Y)
 
                 # Quadratic Error Calculation
-                d = y_train[i]
+                d = y_train[k]
                 error = d - Y
                 error_epoch += np.sum(error**2)
                 
                 # Output layer
                 delta_output = (error * Y_).reshape(-1, 1)
-                aux = (self.eta * delta_output)
-                self.m += np.dot(H.reshape(-1, 1), aux.T)
+                aux_output = (self.eta * delta_output)
+                self.m += np.dot(H.reshape(-1, 1), aux_output.T)
 
                 # Hidden layer
                 delta_hidden = np.sum(np.dot(self.m, delta_output)) * H_
-                aux = (self.eta * delta_hidden).reshape(-1, 1)
-                self.w += np.dot(xi.reshape(-1, 1), aux.T)
+                aux_hidden = (self.eta * delta_hidden).reshape(-1, 1)
+                self.w += np.dot(x_k.reshape(-1, 1), aux_hidden.T)
 
-            mse = error_epoch / m
+            mse = error_epoch / p
             mse_vector.append(mse)
 
             if abs(error_epoch - error_old) <= self.precision:
-                #print('Stop Precision: {}'.format(abs(error_epoch - error_old)))
+                print('Stop Precision: {}'.format(abs(error_epoch - error_old)))
                 break
             if cont_epochs >= self.epochs:
-                #print('Stop Epochs: {}'.format(cont_epochs))
+                print('Stop Epochs: {}'.format(cont_epochs))
                 break
         
             error_old = error_epoch
@@ -117,31 +130,23 @@ class Perceptron:
 
     def test(self, x_test, y_test):
         (m, _) = x_test.shape
-        y_actu = []
+        y_true = []
         y_pred = []
         for i in range(m):
-
             xi = x_test[i]
-            H = np.dot(xi, self.w)
-            H = self.function(H)
-
-            H = np.concatenate(([-1], H), axis=None)
-            Y = np.dot(H, self.m)
-            Y = self.function(Y)
-            y = self.activationFunction(Y)
+            y = self.predict(xi)
             d = y_test[i]
            
             # Confusion Matrix
-            y_actu.append(list(d))
+            y_true.append(list(d))
             y_pred.append(list(y))
 
-        a = util.inverse_transform(y_actu)
-        b = util.inverse_transform(y_pred)
-        cm = ConfusionMatrix(a, b)
+        a = util.inverse_transform(y_true, self.n_classes)
+        b = util.inverse_transform(y_pred, self.n_classes)
+        return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='macro')
+        #cm = ConfusionMatrix(a, b)
         #cm.print_stats()
         #util.plotConfusionMatrix(cm)
-
-        return cm.ACC, cm.TPR, cm.SPC, cm.PPV 
 
     def execute(self):
         # Pre processing

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from Utils.dataset import Data as data
-from Perceptron import Perceptron as pc
+from MultilayerPerceptron import Perceptron as mlp
 
 def main():
 
@@ -9,7 +9,7 @@ def main():
     #x_data, y_data = data.irisFlower()
     #x_data, y_data = data.vertebralColumn()
 
-    model = pc.Perceptron(x_data, y_data, activation='logistic')
+    model = mlp.Perceptron(x_data, y_data, activation='logistic', hidden_layer=5)
     model.execute()
 
 if __name__ == '__main__':
