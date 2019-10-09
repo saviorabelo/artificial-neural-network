@@ -2,8 +2,8 @@ import random
 import numpy as np
 import pandas as pd
 from Utils.utils import Util as util
+from matplotlib import pyplot as plt
 from sklearn.datasets import make_moons, make_circles
-
 
 class Data:
     def artificialMoons():
@@ -31,17 +31,14 @@ class Data:
         return x, y
     
     def artificialSeno():
-        a = 3
-        b = 1
-        n = 100
-        noise = 0.3
+        n = 300
+        noise = 0.2
+        x = np.linspace(-5, 5, n).reshape((-1, 1))
 
-        x = np.linspace(0, 1, n).reshape((-1, 1))
-
-        y = a*np.sin(x) + b
+        y = np.sin(x)+2
         for i in range(n):
             y[i] += random.uniform(-noise, noise)
-
+        
         return x, y
 
     def artificial3D():

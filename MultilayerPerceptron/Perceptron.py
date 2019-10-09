@@ -3,7 +3,6 @@ import random
 import numpy as np
 from Utils.utils import Util as util
 from matplotlib import pyplot as plt
-from pandas_ml import ConfusionMatrix
 from sklearn.metrics import accuracy_score as acc
 #TPR: (Sensitivity, hit rate, recall)
 from sklearn.metrics import recall_score as tpr
@@ -14,10 +13,7 @@ from sklearn.metrics import precision_score as ppv
 class Perceptron:
     def __init__(self, x_data, y_data, activation, g_search, hidden_layer):
         self.x_data = x_data
-        if activation == 'tanh':
-            self.y_data = np.where(y_data == 1, 1, -1)
-        else:
-            self.y_data = y_data
+        self.y_data = y_data
         self.n_classes = np.unique(self.y_data, axis=0)
         self.g_search = g_search
         self.attributes = x_data.shape[1]
@@ -69,13 +65,7 @@ class Perceptron:
 
     def activationFunction(self, u):
         value = np.amax(u)
-        if self.activation == 'logistic':
-            y = np.where(u == value, 1, 0)
-        elif self.activation == 'tanh':
-            y = np.where(u == value, 1, -1)
-        else:
-            raise ValueError('Error in activation function!')
-            y = 0
+        y = np.where(u == value, 1, 0)
         return y
 
     def predict(self, xi, params):
@@ -115,8 +105,7 @@ class Perceptron:
                 acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params)
                 scores.append(acc)
             grid_accuracy.append(np.mean(scores))
-        print('----------------------------------------')
-        print(grid_accuracy)
+        print('Grid search:', grid_accuracy)
         index_max = np.argmax(grid_accuracy)
         return hidden_layer[index_max]
 
@@ -178,8 +167,6 @@ class Perceptron:
     def test(self, x_test, y_test, params):
         y_true = []
         y_pred = []
-        w = params['w']
-        m = params['m']
         (p, _) = x_test.shape
         for k in range(p):
             x_k = x_test[k]
@@ -196,7 +183,6 @@ class Perceptron:
         #return acc(a,b), 0, 0, 0
 
     def execute(self):
-        # Pre processing
         x_data = util.normalizeData(self.x_data)
         x_data = util.insertBias(x_data)
         y_data = self.y_data

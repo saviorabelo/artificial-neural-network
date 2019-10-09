@@ -54,6 +54,7 @@ class Util:
         ax.scatter(x, vector_error, marker='o', color=[0.00, 0.45, 0.74])
         ax.grid(True)
         plt.show()
+        #fig.savefig('.\MultilayerPerceptronRegression\Results\sin_errors.png')
     
     def plotEta(eta_vector):
         fig, ax = plt.subplots()
