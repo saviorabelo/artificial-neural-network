@@ -29,6 +29,20 @@ class Data:
             y[i] += random.uniform(-noise, noise)
 
         return x, y
+    
+    def artificialSeno():
+        a = 3
+        b = 1
+        n = 100
+        noise = 0.3
+
+        x = np.linspace(0, 1, n).reshape((-1, 1))
+
+        y = a*np.sin(x) + b
+        for i in range(n):
+            y[i] += random.uniform(-noise, noise)
+
+        return x, y
 
     def artificial3D():
         a = 2

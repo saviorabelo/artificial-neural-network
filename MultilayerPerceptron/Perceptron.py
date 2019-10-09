@@ -41,13 +41,19 @@ class Perceptron:
         params['m'] = (b - a) * np.random.random_sample((hidden_layer+1, self.output_layer)) + a
         return params
 
+    def updateEta(self, epoch):
+        eta_i = 0.1
+        eta_f = 0.05
+        eta = eta_i * ((eta_f / eta_i) ** (epoch / self.epochs))
+        self.eta = eta
+
     def function(self, u):
         if self.activation == 'logistic':
             y = 1.0/(1.0 + np.exp(-u))
         elif self.activation == 'tanh':
             y = (np.exp(u) - np.exp(-u))/(np.exp(u) + np.exp(-u))
         else:
-            print('Error in function!')
+            raise ValueError('Error in function!')
             y = 0
         return y    
 
@@ -57,7 +63,7 @@ class Perceptron:
         elif self.activation == 'tanh':
             y_ = 0.5 * (1.0 - (u * u))
         else:
-            print('Error in derivate!')
+            raise ValueError('Error in derivate!')
             y_ = 0
         return y_
 
@@ -68,7 +74,7 @@ class Perceptron:
         elif self.activation == 'tanh':
             y = np.where(u == value, 1, -1)
         else:
-            print('Error in activation function!')
+            raise ValueError('Error in activation function!')
             y = 0
         return y
 
@@ -84,16 +90,10 @@ class Perceptron:
         Y = self.function(Y)
         y = self.activationFunction(Y)
         return y
-    
-    def updateEta(self, epoch):
-        eta_i = 0.3
-        eta_f = 0.05
-        eta = eta_i * ((eta_f / eta_i) ** (epoch / self.epochs))
-        self.eta = eta
-    
+
     def grid_search(self, x_train, y_train):
         (n, _) = x_train.shape
-        hidden_layer = [6,8,10,12,14,16]
+        hidden_layer = [2,4,6,8,10,12]
         k_fold = 5
         slice_ = int(n/k_fold)
 
@@ -115,8 +115,8 @@ class Perceptron:
                 acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params)
                 scores.append(acc)
             grid_accuracy.append(np.mean(scores))
-        
-        #print(grid_accuracy)
+        print('----------------------------------------')
+        print(grid_accuracy)
         index_max = np.argmax(grid_accuracy)
         return hidden_layer[index_max]
 
@@ -192,13 +192,13 @@ class Perceptron:
 
         a = util.inverse_transform(y_true, self.n_classes)
         b = util.inverse_transform(y_pred, self.n_classes)
-        #return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
-        return acc(a,b), 0, 0, 0
+        return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
+        #return acc(a,b), 0, 0, 0
 
     def execute(self):
         # Pre processing
-        #x_data = util.normalizeData(self.x_data)
-        x_data = util.insertBias(self.x_data)
+        x_data = util.normalizeData(self.x_data)
+        x_data = util.insertBias(x_data)
         y_data = self.y_data
 
         for i in range(self.realizations):
@@ -220,22 +220,22 @@ class Perceptron:
             self.ppv.append(ppv)
 
         self.acc = np.mean(self.hit_rate)
-        #self.std = np.std(self.hit_rate)
-        #self.tpr = np.mean(self.tpr)
-        #self.spc = np.mean(self.spc)
-        #self.ppv = np.mean(self.ppv)
+        self.std = np.std(self.hit_rate)
+        self.tpr = np.mean(self.tpr)
+        self.spc = np.mean(self.spc)
+        self.ppv = np.mean(self.ppv)
 
         print('Hit rate: {}'.format(self.hit_rate))
         print('Accuracy: {:.2f}'.format(self.acc*100))
-        #print('Minimum: {:.2f}'.format(np.amin(self.hit_rate)*100))
-        #print('Maximum: {:.2f}'.format(np.amax(self.hit_rate)*100))
-        #print('Standard Deviation: {:.2f}'.format(self.std))
-        #print('Sensitivity: {:.2f}'.format(self.tpr*100))
-        #print('Specificity: {:.2f}'.format(self.spc*100))
-        #print('Precision: {:.2f}'.format(self.ppv*100))
+        print('Minimum: {:.2f}'.format(np.amin(self.hit_rate)*100))
+        print('Maximum: {:.2f}'.format(np.amax(self.hit_rate)*100))
+        print('Standard Deviation: {:.2f}'.format(self.std))
+        print('Sensitivity: {:.2f}'.format(self.tpr*100))
+        print('Specificity: {:.2f}'.format(self.spc*100))
+        print('Precision: {:.2f}'.format(self.ppv*100))
 
         #self.plotColorMap_3C(x_train, x_test, y_train, self.predict, params)
-        self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params)
+        #self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params)
 
     def plotColorMap_3C(self, x_train, x_test, y_train, predict, params):
         color1_x = []
@@ -258,7 +258,7 @@ class Perceptron:
                     color3_x.append(i)
                     color3_y.append(j)
                 else:
-                    print('Error color!\n')
+                    raise ValueError('Error color!\n')
         
         # Split a train class
         i = []
@@ -272,7 +272,7 @@ class Perceptron:
             elif np.array_equal(y, [1,0,0]):
                 k.append(index)
             else:
-                print('Error!\n')
+                raise ValueError('Error!\n')
         train1 = x_train[i]
         train2 = x_train[j]
         train3 = x_train[k]
@@ -312,7 +312,7 @@ class Perceptron:
                     color2_x.append(i)
                     color2_y.append(j)
                 else:
-                    print('Error color!\n')
+                    raise ValueError('Error color!\n')
         
         # Split a train class
         i = []
@@ -323,7 +323,7 @@ class Perceptron:
             elif np.array_equal(y, [1,0]):
                 j.append(index)
             else:
-                print('Error!\n')
+                raise ValueError('Error!\n')
         train1 = x_train[i]
         train2 = x_train[j]
 
