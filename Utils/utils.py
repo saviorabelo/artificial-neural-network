@@ -88,4 +88,26 @@ class Util:
                 if np.array_equal(i, j):
                     aux = list(iden[index])
                     classes_new.append(aux)
+                    break
         return np.array(classes_new)
+    
+    def transform_number(classes):
+        """
+        Args:
+            classes: um vetor de strings
+        Returns:
+            Um vetor de numeros
+        """
+        n_classes = np.unique(classes)
+        k = len(n_classes)
+
+        classes_new = []
+        for i in classes:
+            for index, j in enumerate(n_classes):
+                if np.array_equal(i, j):
+                    aux = index+1
+                    classes_new.append([aux])
+        return np.array(classes_new)
+
+
+

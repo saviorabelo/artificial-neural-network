@@ -135,7 +135,7 @@ class Perceptron:
                 # Quadratic Error Calculation
                 d = y_train[k]
                 error = d - Y
-                error_epoch += np.sum(error**2)
+                error_epoch += 0.5 * np.sum(error**2)
                 
                 # Output layer
                 delta_output = (error * Y_).reshape(-1, 1)

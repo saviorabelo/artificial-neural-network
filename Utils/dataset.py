@@ -252,3 +252,26 @@ class Data:
                 y.append([0])
 
         return np.array(x), np.array(y)
+    
+    def abalone():
+        dataset = pd.read_csv('Datasets/abalone.csv', sep=',')
+        Y = dataset['Rings']
+        Y = Y.real.reshape(1, -1).T
+
+        X = dataset.drop(['Rings'], axis=1)
+        sex = dataset['Sex']
+        X = X.drop(['Sex'], axis=1)
+        sex = util.transform_number(sex)
+        X = np.concatenate((sex, X), axis=1)
+
+        return np.array(x), Y
+
+    def carFuel():
+        dataset = pd.read_csv('Datasets/measurements.csv', sep=',')
+
+        Y = dataset['consume']
+        X = dataset.drop(['consume'], axis=1)
+
+        Y = np.array(Y).reshape(1,-1).T
+
+        return X.values, Y

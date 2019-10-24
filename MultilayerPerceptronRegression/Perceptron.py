@@ -29,7 +29,7 @@ class Perceptron:
         return params
 
     def updateEta(self, epoch):
-        eta_i = 0.05
+        eta_i = 0.1
         eta_f = 0.05
         eta = eta_i * ((eta_f / eta_i) ** (epoch / self.epochs))
         self.eta = eta
@@ -101,7 +101,7 @@ class Perceptron:
                 aux_hidden = (self.eta * delta_hidden).reshape(-1, 1)
                 w += np.dot(x_k.reshape(-1, 1), aux_hidden.T)
 
-            mse = error_epoch / p
+            mse = (0.5 * error_epoch) / p
             mse_vector.append(mse)
 
             if abs(error_epoch - error_old) <= self.precision:
@@ -113,7 +113,7 @@ class Perceptron:
         
             error_old = error_epoch
             cont_epochs += 1
-        util.plotErrors(mse_vector)
+        #util.plotErrors(mse_vector)
         params['w'] = w
         params['m'] = m
         return params
@@ -154,8 +154,7 @@ class Perceptron:
         print('RMSE: {}'.format(np.mean(self.rmse)))
         print('Std RMSE: {}'.format(np.std(self.rmse)))
 
-        self.plotRegression(x_data, x_train, x_test, y_train, y_test, self.predict, params)
-
+        #self.plotRegression(x_data, x_train, x_test, y_train, y_test, self.predict, params)
 
     def plotRegression(self, x_data, x_train, x_test, y_train, y_test, predict, params):
         x = x_data[:,1]

@@ -6,6 +6,10 @@ def main():
     # Artificial Database
     x_data, y_data = data.artificialSeno()
 
+    #Database
+    #x_data, y_data = data.abalone()
+    #x_data, y_data = data.carFuel()
+
     model = mlp.Perceptron(x_data, y_data, activation='logistic', hidden_layer=10)
     model.execute()
 
