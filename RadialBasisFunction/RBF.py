@@ -11,57 +11,28 @@ from sklearn.metrics import recall_score as tpr
 from sklearn.metrics import precision_score as ppv
 
 class RBF:
-    def __init__(self, x_data, y_data, activation, g_search, hidden_layer):
+    def __init__(self, x_data, y_data, g_search=False, n_centers=20, width=10):
         self.x_data = x_data
         self.y_data = y_data
         self.n_classes = np.unique(self.y_data, axis=0)
         self.g_search = g_search
         self.attributes = x_data.shape[1]
-        self.hidden_layer = hidden_layer
         self.output_layer = y_data.shape[1]
-        self.epochs = 500
+        self.n_centers = n_centers
+        self.width = width
         self.realizations = 1
-        self.precision = 10**(-5)
         self.train_size = 0.8
-        self.activation = activation
         self.hit_rate = []
         self.tpr = []
         self.spc = []
         self.ppv = []
     
-    def initWeigths(self, hidden_layer):
+    def initWeigths(self, n_centers):
         params = {}
-        a = -1.5
-        b = 1.5
-        params['w'] = (b - a) * np.random.random_sample((self.attributes+1, hidden_layer)) + a
-        params['m'] = (b - a) * np.random.random_sample((hidden_layer+1, self.output_layer)) + a
+        a = 0
+        b = 1
+        params['c'] = (b - a) * np.random.random_sample((n_centers, self.attributes+1)) + a
         return params
-
-    def updateEta(self, epoch):
-        eta_i = 0.1
-        eta_f = 0.05
-        eta = eta_i * ((eta_f / eta_i) ** (epoch / self.epochs))
-        self.eta = eta
-
-    def function(self, u):
-        if self.activation == 'logistic':
-            y = 1.0/(1.0 + np.exp(-u))
-        elif self.activation == 'tanh':
-            y = (np.exp(u) - np.exp(-u))/(np.exp(u) + np.exp(-u))
-        else:
-            raise ValueError('Error in function!')
-            y = 0
-        return y    
-
-    def derivate(self, u):
-        if self.activation == 'logistic':
-            y_ = u * (1.0 - u)
-        elif self.activation == 'tanh':
-            y_ = 0.5 * (1.0 - (u * u))
-        else:
-            raise ValueError('Error in derivate!')
-            y_ = 0
-        return y_
 
     def activationFunction(self, u):
         value = np.amax(u)
@@ -69,17 +40,7 @@ class RBF:
         return y
 
     def predict(self, xi, params):
-        w = params['w']
-        m = params['m']
-        
-        H = np.dot(xi, w)
-        H = self.function(H)
-        H = np.concatenate(([-1], H), axis=None)
-
-        Y = np.dot(H, m)
-        Y = self.function(Y)
-        y = self.activationFunction(Y)
-        return y
+        pass
 
     def grid_search(self, x_train, y_train):
         (n, _) = x_train.shape
@@ -108,71 +69,54 @@ class RBF:
         print('Grid search:', grid_accuracy)
         index_max = np.argmax(grid_accuracy)
         return hidden_layer[index_max]
+    
+    def saidas_centro(self, x, c, width):
+        aux = (x - c).reshape(-1,1).T
+        ans = np.exp(-0.5 * np.dot(aux, aux.T) / (width^2) )
+        return ans
 
-    def train(self, x_train, y_train, hidden_layer):
-        error_old = 0
-        cont_epochs = 0
-        mse_vector = []
-        params = self.initWeigths(hidden_layer)
-        w = params['w']
-        m = params['m']
-        while True:
-            self.updateEta(cont_epochs)
-            x_train, y_train = util.shuffleData(x_train, y_train)
-            (p, _) = x_train.shape
-            error_epoch = 0
-            for k in range(p):
-                x_k = x_train[k]
-                H = np.dot(x_k, w)
-                H = self.function(H)
-                H_ = self.derivate(H)
-                
-                H = np.concatenate(([-1], H), axis=None)
-                Y = np.dot(H, m)
-                Y = self.function(Y)
-                Y_ = self.derivate(Y)
+    def train(self, x_train, y_train, n_centers, width):
 
-                # Quadratic Error Calculation
-                d = y_train[k]
-                error = d - Y
-                error_epoch += 0.5 * np.sum(error**2)
-                
-                # Output layer
-                delta_output = (error * Y_).reshape(-1, 1)
-                aux_output = (self.eta * delta_output)
-                m += np.dot(H.reshape(-1, 1), aux_output.T)
-
-                # Hidden layer
-                delta_hidden = np.sum(np.dot(m, delta_output)) * H_
-                aux_hidden = (self.eta * delta_hidden).reshape(-1, 1)
-                w += np.dot(x_k.reshape(-1, 1), aux_hidden.T)
-
-            mse = error_epoch / p
-            mse_vector.append(mse)
-
-            if abs(error_epoch - error_old) <= self.precision:
-                #print('Stop Precision: {} (Epochs {})'.format(abs(error_epoch - error_old), cont_epochs))
-                break
-            if cont_epochs >= self.epochs:
-                #print('Stop Epochs: {}'.format(cont_epochs))
-                break
+        params = self.initWeigths(n_centers)
+        c = params['c']
         
-            error_old = error_epoch
-            cont_epochs += 1
-        #util.plotErrors(mse_vector)
+        x_train, y_train = util.shuffleData(x_train, y_train)
+        (p, _) = x_train.shape
+        H = np.zeros((p, n_centers))
+
+        for i in range(p):
+            for j in range(n_centers):
+                H[i,j] = self.saidas_centro(x_train[i], c[j], width)
+
+        bias = -1 * np.ones((p, 1))
+        H = np.concatenate((bias, H), axis=1)
+        w = np.dot(np.linalg.pinv(H), y_train)
+
         params['w'] = w
-        params['m'] = m
         return params
 
-    def test(self, x_test, y_test, params):
+    def test(self, x_test, y_test, params, n_centers, width):
+
+        c = params['c']
+        w = params['w']
+        
+        (p, _) = x_test.shape
+        H = np.zeros((p, n_centers))
+
+        for i in range(p):
+            for j in range(n_centers):
+                H[i,j] = self.saidas_centro(x_test[i], c[j], width)
+
+        bias = -1 * np.ones((p, 1))
+        H = np.concatenate((bias, H), axis=1)
+        Y = np.dot(H, w)
+
         y_true = []
         y_pred = []
-        (p, _) = x_test.shape
-        for k in range(p):
-            x_k = x_test[k]
-            y = self.predict(x_k, params)
-            d = y_test[k]
-           
+        for i in range(p):
+            d = y_test[i]
+            y = self.activationFunction(Y[i])
+            
             # Confusion Matrix
             y_true.append(list(d))
             y_pred.append(list(y))
@@ -195,10 +139,11 @@ class RBF:
                 best_hidden_layer = self.grid_search(x_train, y_train)
                 print('Hidden Layer:', best_hidden_layer)
             else:
-                best_hidden_layer = self.hidden_layer
+                best_n_centers = self.n_centers
+                best_width = self.width
 
-            params = self.train(x_train, y_train, best_hidden_layer)
-            acc, tpr, spc, ppv = self.test(x_test, y_test, params)
+            params = self.train(x_train, y_train, best_n_centers, best_width)
+            acc, tpr, spc, ppv = self.test(x_test, y_test, params, best_n_centers, best_width)
             
             self.hit_rate.append(acc)
             self.tpr.append(tpr)
