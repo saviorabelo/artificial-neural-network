@@ -39,8 +39,21 @@ class RBF:
         y = np.where(u == value, 1, 0)
         return y
 
-    def predict(self, xi, params):
-        pass
+    def predict(self, xi, params, n_centers, width):
+
+        c = params['c']
+        w = params['w']
+        
+        h = np.zeros((1, n_centers))
+
+        for j in range(n_centers):
+            h[0,j] = self.saidas_centro(xi, c[j], width)
+
+        h = np.concatenate(([-1], h), axis=None)
+        Y = np.dot(h, w)
+        y = self.activationFunction(Y)
+        
+        return y
 
     def grid_search(self, x_train, y_train):
         (n, _) = x_train.shape
@@ -82,40 +95,26 @@ class RBF:
         
         x_train, y_train = util.shuffleData(x_train, y_train)
         (p, _) = x_train.shape
-        H = np.zeros((p, n_centers))
+        h = np.zeros((p, n_centers))
 
         for i in range(p):
             for j in range(n_centers):
-                H[i,j] = self.saidas_centro(x_train[i], c[j], width)
+                h[i,j] = self.saidas_centro(x_train[i], c[j], width)
 
         bias = -1 * np.ones((p, 1))
-        H = np.concatenate((bias, H), axis=1)
-        w = np.dot(np.linalg.pinv(H), y_train)
+        h = np.concatenate((bias, h), axis=1)
+        w = np.dot(np.linalg.pinv(h), y_train)
 
         params['w'] = w
         return params
 
     def test(self, x_test, y_test, params, n_centers, width):
-
-        c = params['c']
-        w = params['w']
-        
-        (p, _) = x_test.shape
-        H = np.zeros((p, n_centers))
-
-        for i in range(p):
-            for j in range(n_centers):
-                H[i,j] = self.saidas_centro(x_test[i], c[j], width)
-
-        bias = -1 * np.ones((p, 1))
-        H = np.concatenate((bias, H), axis=1)
-        Y = np.dot(H, w)
-
         y_true = []
         y_pred = []
+        (p, _) = x_test.shape
         for i in range(p):
             d = y_test[i]
-            y = self.activationFunction(Y[i])
+            y = self.predict(x_test[i], params, n_centers, width)
             
             # Confusion Matrix
             y_true.append(list(d))
@@ -123,8 +122,8 @@ class RBF:
 
         a = util.inverse_transform(y_true, self.n_classes)
         b = util.inverse_transform(y_pred, self.n_classes)
-        return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
-        #return acc(a,b), 0, 0, 0
+        #return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
+        return acc(a,b), 0, 0, 0
 
     def execute(self):
         x_data = util.normalizeData(self.x_data)
@@ -136,8 +135,9 @@ class RBF:
             x_train, x_test, y_train, y_test = util.splitData(x_data_aux, y_data_aux, self.train_size)
             
             if self.g_search:
-                best_hidden_layer = self.grid_search(x_train, y_train)
-                print('Hidden Layer:', best_hidden_layer)
+                best_n_centers, best_width = self.grid_search(x_train, y_train)
+                print('Best N Centers: ', best_n_centers)
+                print('Best Width: ', best_width)
             else:
                 best_n_centers = self.n_centers
                 best_width = self.width
@@ -165,10 +165,10 @@ class RBF:
         print('Specificity: {:.2f}'.format(self.spc*100))
         print('Precision: {:.2f}'.format(self.ppv*100))
 
-        #self.plotColorMap_3C(x_train, x_test, y_train, self.predict, params)
-        #self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params)
+        #self.plotColorMap_3C(x_train, x_test, y_train, self.predict, params, best_n_centers, best_width)
+        #self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params, best_n_centers, best_width)
 
-    def plotColorMap_3C(self, x_train, x_test, y_train, predict, params):
+    def plotColorMap_3C(self, x_train, x_test, y_train, predict, params, best_n_centers, best_width):
         color1_x = []
         color1_y = []
         color2_x = []
@@ -178,7 +178,7 @@ class RBF:
         for i in np.arange(0,1.0,0.005):
             for j in np.arange(0,1.0,0.005):
                 xi = np.array([-1, i, j])
-                y = predict(xi, params)
+                y = predict(xi, params, best_n_centers, best_width)
                 if np.array_equal(y, [0,0,1]):
                     color1_x.append(i)
                     color1_y.append(j)
@@ -227,7 +227,7 @@ class RBF:
 
         #fig.savefig('.\MultilayerPerceptron\Results\color_map.png')
     
-    def plotColorMap_2C(self, x_train, x_test, y_train, predict, params):
+    def plotColorMap_2C(self, x_train, x_test, y_train, predict, params, best_n_centers, best_width):
         color1_x = []
         color1_y = []
         color2_x = []
@@ -235,7 +235,7 @@ class RBF:
         for i in np.arange(0,1,0.005):
             for j in np.arange(0,1,0.005):
                 xi = np.array([-1, i, j])
-                y = predict(xi, params)
+                y = predict(xi, params, best_n_centers, best_width)
                 if np.array_equal(y, [0,1]):
                     color1_x.append(i)
                     color1_y.append(j)
