@@ -11,7 +11,7 @@ from sklearn.metrics import recall_score as tpr
 from sklearn.metrics import precision_score as ppv
 
 class RBF:
-    def __init__(self, x_data, y_data, g_search=False, n_centers=20, width=10):
+    def __init__(self, x_data, y_data, g_search=False, n_centers=10, width=10):
         self.x_data = x_data
         self.y_data = y_data
         self.n_classes = np.unique(self.y_data, axis=0)
@@ -81,7 +81,7 @@ class RBF:
                     acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params, c, w)
                     scores.append(acc)
                 grid_accuracy[index_w, index_c] = np.mean(scores)
-        print('Grid search:', grid_accuracy)
+        #print('Grid search:', grid_accuracy)
         ind = np.unravel_index(np.argmax(grid_accuracy, axis=None), grid_accuracy.shape)
         return width[ind[0]], center[ind[1]]
     
