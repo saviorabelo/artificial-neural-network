@@ -264,7 +264,7 @@ class Data:
         sex = util.transform_number(sex)
         X = np.concatenate((sex, X), axis=1)
 
-        return np.array(x), Y
+        return np.array(X), Y
 
     def carFuel():
         dataset = pd.read_csv('Datasets/measurements.csv', sep=',')

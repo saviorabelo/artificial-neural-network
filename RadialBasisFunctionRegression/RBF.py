@@ -32,11 +32,6 @@ class RBF:
         params['c'] = (b - a) * np.random.random_sample((n_centers, self.attributes+1)) + a
         return params
 
-    def activationFunction(self, u):
-        value = np.amax(u)
-        y = np.where(u == value, 1, 0)
-        return y
-
     def predict(self, xi, params, n_centers, width):
 
         c = params['c']
@@ -48,8 +43,7 @@ class RBF:
             h[0,j] = self.saidas_centro(xi, c[j], width)
 
         h = np.concatenate(([-1], h), axis=None)
-        Y = np.dot(h, w)
-        y = self.activationFunction(Y)
+        y = np.dot(h, w)
         
         return y
 
@@ -115,14 +109,14 @@ class RBF:
         print('RMSE: {}'.format(np.mean(self.rmse)))
         print('Std RMSE: {}'.format(np.std(self.rmse)))
 
-        #self.plotRegression(x_data, x_train, x_test, y_train, y_test, self.predict, params)
+        #self.plotRegression(x_data, x_train, x_test, y_train, y_test, self.predict, params, best_n_centers, best_width)
 
-    def plotRegression(self, x_data, x_train, x_test, y_train, y_test, predict, params):
+    def plotRegression(self, x_data, x_train, x_test, y_train, y_test, predict, params, n_centers, width):
         x = x_data[:,1]
-        y = [predict(np.array([-1, i]), params) for i in x]
+        y = [predict(np.array([-1, i]), params, n_centers, width) for i in x]
 
         fig, ax = plt.subplots()
-        plt.title('MLP Color Map')
+        plt.title('RBF Color Map')
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo y')
 
@@ -134,6 +128,6 @@ class RBF:
         ax.grid(True)
         plt.show()
 
-        #fig.savefig('.\MultilayerPerceptronRegression\Results\sin_q10.png')
+        #fig.savefig('.\RadialBasisFunctionRegression\Results\sin_1.png')
 
 
