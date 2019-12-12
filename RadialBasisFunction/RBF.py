@@ -57,31 +57,33 @@ class RBF:
 
     def grid_search(self, x_train, y_train):
         (n, _) = x_train.shape
-        hidden_layer = [2,4,6,8,10,12]
+        center = [10,12,14,16,18,20]
+        width = [10,12,14,16,18,20]
         k_fold = 5
         slice_ = int(n/k_fold)
 
-        grid_accuracy = []
-        for q in hidden_layer:
-            scores = []
-            # cross validation
-            for j in range(k_fold):
-                # set range
-                a = j*slice_
-                b = (j+1)*slice_
+        grid_accuracy = np.zeros((len(width), len(center)))
+        for index_w, w in enumerate(width):
+            for index_c, c in enumerate(center):
+                scores = []
+                # cross validation
+                for j in range(k_fold):
+                    # set range
+                    a = j*slice_
+                    b = (j+1)*slice_
 
-                X_tra_aux = np.concatenate((x_train[0:a], x_train[b:n]), axis=0)
-                X_test_aux = x_train[a:b]
-                Y_tra_aux = np.concatenate((y_train[0:a], y_train[b:n]), axis=0)
-                Y_test_aux = y_train[a:b]
+                    X_tra_aux = np.concatenate((x_train[0:a], x_train[b:n]), axis=0)
+                    X_test_aux = x_train[a:b]
+                    Y_tra_aux = np.concatenate((y_train[0:a], y_train[b:n]), axis=0)
+                    Y_test_aux = y_train[a:b]
 
-                params = self.train(X_tra_aux, Y_tra_aux, q)
-                acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params)
-                scores.append(acc)
-            grid_accuracy.append(np.mean(scores))
+                    params = self.train(X_tra_aux, Y_tra_aux, c, w)
+                    acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params, c, w)
+                    scores.append(acc)
+                grid_accuracy[index_w, index_c] = np.mean(scores)
         print('Grid search:', grid_accuracy)
-        index_max = np.argmax(grid_accuracy)
-        return hidden_layer[index_max]
+        ind = np.unravel_index(np.argmax(grid_accuracy, axis=None), grid_accuracy.shape)
+        return width[ind[0]], center[ind[1]]
     
     def saidas_centro(self, x, c, width):
         aux = (x - c).reshape(-1,1).T

@@ -18,7 +18,7 @@ def main():
     #x_data, y_data = data.cancer()
 
 
-    model = rbf.RBF(x_data, y_data)
+    model = rbf.RBF(x_data, y_data, g_search=True)
     model.execute()
 
 if __name__ == '__main__':
