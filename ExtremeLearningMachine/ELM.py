@@ -121,12 +121,12 @@ class ELM:
 
         a = util.inverse_transform(y_true, self.n_classes)
         b = util.inverse_transform(y_pred, self.n_classes)
-        #return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
-        return acc(a,b), 0, 0, 0
+        return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
+        #return acc(a,b), 0, 0, 0
 
     def grid_search(self, x_train, y_train):
         (n, _) = x_train.shape
-        hidden_layer = [2,4,6,8,10,12]
+        hidden_layer = [4,6,8,10,12,14,16,18,20,22,24,26,28,30]
         k_fold = 5
         slice_ = int(n/k_fold)
 
