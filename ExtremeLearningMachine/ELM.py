@@ -10,122 +10,147 @@ from sklearn.metrics import recall_score as tpr
 #PPV: Pos Pred Value (Precision)
 from sklearn.metrics import precision_score as ppv
 
-class RBF:
-    def __init__(self, x_data, y_data, g_search=False, n_centers=10, width=10):
+class ELM:
+    def __init__(self, x_data, y_data, activation='logistic', g_search=False, hidden_layer=10):
         self.x_data = x_data
         self.y_data = y_data
         self.n_classes = np.unique(self.y_data, axis=0)
         self.g_search = g_search
         self.attributes = x_data.shape[1]
+        self.hidden_layer = hidden_layer
         self.output_layer = y_data.shape[1]
-        self.n_centers = n_centers
-        self.width = width
+        self.epochs = 500
         self.realizations = 1
+        self.precision = 10**(-5)
         self.train_size = 0.8
+        self.activation = activation
         self.hit_rate = []
         self.tpr = []
         self.spc = []
         self.ppv = []
     
-    def initWeigths(self, n_centers):
+    def initWeigths(self, hidden_layer):
         params = {}
-        a = 0
-        b = 1
-        params['c'] = (b - a) * np.random.random_sample((n_centers, self.attributes+1)) + a
+        a = -1.5
+        b = 1.5
+        params['w'] = (b - a) * np.random.random_sample((self.attributes+1, hidden_layer)) + a
+        params['m'] = (b - a) * np.random.random_sample((hidden_layer+1, self.output_layer)) + a
         return params
+
+    def updateEta(self, epoch):
+        eta_i = 0.1
+        eta_f = 0.05
+        eta = eta_i * ((eta_f / eta_i) ** (epoch / self.epochs))
+        self.eta = eta
+
+    def function(self, u):
+        if self.activation == 'logistic':
+            y = 1.0/(1.0 + np.exp(-u))
+        elif self.activation == 'tanh':
+            y = (np.exp(u) - np.exp(-u))/(np.exp(u) + np.exp(-u))
+        else:
+            raise ValueError('Error in function!')
+            y = 0
+        return y    
+
+    def derivate(self, u):
+        if self.activation == 'logistic':
+            y_ = u * (1.0 - u)
+        elif self.activation == 'tanh':
+            y_ = 0.5 * (1.0 - (u * u))
+        else:
+            raise ValueError('Error in derivate!')
+            y_ = 0
+        return y_
 
     def activationFunction(self, u):
         value = np.amax(u)
         y = np.where(u == value, 1, 0)
         return y
 
-    def predict(self, xi, params, n_centers, width):
-
-        c = params['c']
+    def predict(self, xi, params):
         w = params['w']
+        m = params['m']
         
-        h = np.zeros((1, n_centers))
+        H = np.dot(xi, w)
+        H = self.function(H)
+        H = np.concatenate(([-1], H), axis=None)
+        H = H.reshape(1,-1)
 
-        for j in range(n_centers):
-            h[0,j] = self.saidas_centro(xi, c[j], width)
-
-        h = np.concatenate(([-1], h), axis=None)
-        Y = np.dot(h, w)
+        Y = np.dot(H, m)
+        Y = self.function(Y)
         y = self.activationFunction(Y)
-        
-        return y
 
-    def grid_search(self, x_train, y_train):
-        (n, _) = x_train.shape
-        center = [10,12,14,16,18,20]
-        width = [10,12,14,16,18,20]
-        k_fold = 5
-        slice_ = int(n/k_fold)
+        return y[0]
 
-        grid_accuracy = np.zeros((len(width), len(center)))
-        for index_w, w in enumerate(width):
-            for index_c, c in enumerate(center):
-                scores = []
-                # cross validation
-                for j in range(k_fold):
-                    # set range
-                    a = j*slice_
-                    b = (j+1)*slice_
+    def train(self, x_train, y_train, hidden_layer):
+        error_old = 0
+        cont_epochs = 0
+        mse_vector = []
+        params = self.initWeigths(hidden_layer)
+        w = params['w']
+        m = params['m']
 
-                    X_tra_aux = np.concatenate((x_train[0:a], x_train[b:n]), axis=0)
-                    X_test_aux = x_train[a:b]
-                    Y_tra_aux = np.concatenate((y_train[0:a], y_train[b:n]), axis=0)
-                    Y_test_aux = y_train[a:b]
+        H = np.dot(x_train, w)
+        H = self.function(H)
 
-                    params = self.train(X_tra_aux, Y_tra_aux, c, w)
-                    acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params, c, w)
-                    scores.append(acc)
-                grid_accuracy[index_w, index_c] = np.mean(scores)
-        #print('Grid search:', grid_accuracy)
-        ind = np.unravel_index(np.argmax(grid_accuracy, axis=None), grid_accuracy.shape)
-        return width[ind[0]], center[ind[1]]
-    
-    def saidas_centro(self, x, c, width):
-        aux = (x - c).reshape(-1,1).T
-        ans = np.exp(-0.5 * np.dot(aux, aux.T) / (width^2) )
-        return ans
+        # Bias
+        (m, _) = H.shape
+        bias = -1 * np.ones((m, 1))
+        H = np.concatenate((bias, H), axis=1)
 
-    def train(self, x_train, y_train, n_centers, width):
-
-        params = self.initWeigths(n_centers)
-        c = params['c']
-        
-        x_train, y_train = util.shuffleData(x_train, y_train)
-        (p, _) = x_train.shape
-        h = np.zeros((p, n_centers))
-
-        for i in range(p):
-            for j in range(n_centers):
-                h[i,j] = self.saidas_centro(x_train[i], c[j], width)
-
-        bias = -1 * np.ones((p, 1))
-        h = np.concatenate((bias, h), axis=1)
-        w = np.dot(np.linalg.pinv(h), y_train)
+        H_pinv = np.linalg.pinv(H)
+        m = np.dot(H_pinv, y_train)
 
         params['w'] = w
+        params['m'] = m
         return params
 
-    def test(self, x_test, y_test, params, n_centers, width):
+    def test(self, x_test, y_test, params):
         y_true = []
         y_pred = []
         (p, _) = x_test.shape
-        for i in range(p):
-            d = y_test[i]
-            y = self.predict(x_test[i], params, n_centers, width)
-            
+        for k in range(p):
+            x_k = x_test[k]
+            y = self.predict(x_k, params)
+            d = y_test[k]
+           
             # Confusion Matrix
             y_true.append(list(d))
             y_pred.append(list(y))
 
         a = util.inverse_transform(y_true, self.n_classes)
         b = util.inverse_transform(y_pred, self.n_classes)
-        return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
-        #return acc(a,b), 0, 0, 0
+        #return acc(a,b), tpr(a,b, average='macro'), 0, ppv(a,b, average='weighted')
+        return acc(a,b), 0, 0, 0
+
+    def grid_search(self, x_train, y_train):
+        (n, _) = x_train.shape
+        hidden_layer = [2,4,6,8,10,12]
+        k_fold = 5
+        slice_ = int(n/k_fold)
+
+        grid_accuracy = []
+        for q in hidden_layer:
+            scores = []
+            # cross validation
+            for j in range(k_fold):
+                # set range
+                a = j*slice_
+                b = (j+1)*slice_
+
+                X_tra_aux = np.concatenate((x_train[0:a], x_train[b:n]), axis=0)
+                X_test_aux = x_train[a:b]
+                Y_tra_aux = np.concatenate((y_train[0:a], y_train[b:n]), axis=0)
+                Y_test_aux = y_train[a:b]
+
+                params = self.train(X_tra_aux, Y_tra_aux, q)
+                acc, _, _, _ = self.test(X_test_aux, Y_test_aux, params)
+                scores.append(acc)
+            grid_accuracy.append(np.mean(scores))
+        print('Grid search:', grid_accuracy)
+        index_max = np.argmax(grid_accuracy)
+        return hidden_layer[index_max]
 
     def execute(self):
         x_data = util.normalizeData(self.x_data)
@@ -137,15 +162,13 @@ class RBF:
             x_train, x_test, y_train, y_test = util.splitData(x_data_aux, y_data_aux, self.train_size)
             
             if self.g_search:
-                best_n_centers, best_width = self.grid_search(x_train, y_train)
-                print('Best N Centers: ', best_n_centers)
-                print('Best Width: ', best_width)
+                best_hidden_layer = self.grid_search(x_train, y_train)
+                print('Hidden Layer:', best_hidden_layer)
             else:
-                best_n_centers = self.n_centers
-                best_width = self.width
+                best_hidden_layer = self.hidden_layer
 
-            params = self.train(x_train, y_train, best_n_centers, best_width)
-            acc, tpr, spc, ppv = self.test(x_test, y_test, params, best_n_centers, best_width)
+            params = self.train(x_train, y_train, best_hidden_layer)
+            acc, tpr, spc, ppv = self.test(x_test, y_test, params)
             
             self.hit_rate.append(acc)
             self.tpr.append(tpr)
@@ -167,10 +190,10 @@ class RBF:
         print('Specificity: {:.2f}'.format(self.spc*100))
         print('Precision: {:.2f}'.format(self.ppv*100))
 
-        #self.plotColorMap_3C(x_train, x_test, y_train, self.predict, params, best_n_centers, best_width)
-        #self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params, best_n_centers, best_width)
+        #self.plotColorMap_3C(x_train, x_test, y_train, self.predict, params)
+        #self.plotColorMap_2C(x_train, x_test, y_train, self.predict, params)
 
-    def plotColorMap_3C(self, x_train, x_test, y_train, predict, params, best_n_centers, best_width):
+    def plotColorMap_3C(self, x_train, x_test, y_train, predict, params):
         color1_x = []
         color1_y = []
         color2_x = []
@@ -180,7 +203,7 @@ class RBF:
         for i in np.arange(0,1.0,0.005):
             for j in np.arange(0,1.0,0.005):
                 xi = np.array([-1, i, j])
-                y = predict(xi, params, best_n_centers, best_width)
+                y = predict(xi, params)
                 if np.array_equal(y, [0,0,1]):
                     color1_x.append(i)
                     color1_y.append(j)
@@ -211,7 +234,7 @@ class RBF:
         train3 = x_train[k]
 
         fig, ax = plt.subplots()
-        plt.title('MLP Color Map')
+        plt.title('ELM Color Map')
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo y')
 
@@ -229,7 +252,7 @@ class RBF:
 
         #fig.savefig('.\MultilayerPerceptron\Results\color_map.png')
     
-    def plotColorMap_2C(self, x_train, x_test, y_train, predict, params, best_n_centers, best_width):
+    def plotColorMap_2C(self, x_train, x_test, y_train, predict, params):
         color1_x = []
         color1_y = []
         color2_x = []
@@ -237,7 +260,7 @@ class RBF:
         for i in np.arange(0,1,0.005):
             for j in np.arange(0,1,0.005):
                 xi = np.array([-1, i, j])
-                y = predict(xi, params, best_n_centers, best_width)
+                y = predict(xi, params)
                 if np.array_equal(y, [0,1]):
                     color1_x.append(i)
                     color1_y.append(j)
@@ -261,7 +284,7 @@ class RBF:
         train2 = x_train[j]
 
         fig, ax = plt.subplots()
-        plt.title('MLP Color Map')
+        plt.title('ELM Color Map')
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo y')
 

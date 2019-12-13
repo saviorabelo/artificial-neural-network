@@ -20,7 +20,7 @@ class RBF:
         self.output_layer = y_data.shape[1]
         self.n_centers = n_centers
         self.width = width
-        self.realizations = 1
+        self.realizations = 20
         self.train_size = 0.8
         self.mse = []
         self.rmse = []
@@ -49,7 +49,7 @@ class RBF:
 
     def saidas_centro(self, x, c, width):
         aux = (x - c).reshape(-1,1).T
-        ans = np.exp(-0.5 * np.dot(aux, aux.T) / (width^2) )
+        ans = np.exp(-0.5 * np.dot(aux, aux.T) / (width^2))
         return ans
 
     def train(self, x_train, y_train, n_centers, width):
